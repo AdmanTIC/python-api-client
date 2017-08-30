@@ -62,6 +62,7 @@ class Kanboard(object):
         self._username = username
         self._password = password
         self._auth_header = auth_header
+        self._headers = {}
 
     def __getattr__(self, name):
         def function(*args, **kwargs):
@@ -97,6 +98,9 @@ class Kanboard(object):
             raise exceptions.KanboardClientException(str(e))
         return self._parse_response(response)
 
+    def add_headers(self, **kwargs):
+        self._headers.update(kwargs)
+
     def execute(self, method, **kwargs):
         """
         Call remote API procedure
@@ -120,9 +124,7 @@ class Kanboard(object):
         }
 
         credentials = base64.b64encode('{}:{}'.format(self._username, self._password).encode())
-        headers = {
-            self._auth_header: 'Basic {}'.format(credentials.decode()),
-            'Content-Type': 'application/json',
-        }
+        self._headers[self._auth_header] = 'Basic {}'.format(credentials.decode())
+        self._headers['Content-Type'] = 'application/json'
 
-        return self._do_request(headers, payload)
+        return self._do_request(self._headers, payload)
